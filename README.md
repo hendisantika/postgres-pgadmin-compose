@@ -6,10 +6,40 @@ Docker Compose setup for PostgreSQL 18 and pgAdmin 4.
 
 ## Prerequisites
 
-- Docker
-- Docker Compose
+- Ubuntu 24.04 (or compatible Linux)
+- Docker & Docker Compose
 
-## Quick Start
+## Deploy to Ubuntu Server
+
+One-command deployment:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hendisantika/postgres-pgadmin-compose/main/scripts/deploy.sh | bash
+```
+
+The script will automatically:
+- Update system packages
+- Install Docker & Docker Compose
+- Clone repository
+- Setup environment file
+- Configure UFW firewall
+- Create SSL directory
+
+**Firewall ports opened:**
+
+| Port | Service |
+|------|---------|
+| 22/tcp | SSH |
+| 80/tcp | HTTP |
+| 443/tcp | HTTPS |
+| 5433/tcp | PostgreSQL via Nginx |
+
+After deployment, follow the on-screen instructions to:
+1. Edit `.env` with your credentials
+2. Add Cloudflare SSL certificates
+3. Start services with `make up-nginx-ssl`
+
+## Quick Start (Local)
 
 1. Clone the repository:
    ```bash
