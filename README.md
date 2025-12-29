@@ -1,5 +1,7 @@
 # PostgreSQL 18 + pgAdmin Docker Compose
 
+[![Test Docker Compose](https://github.com/hendisantika/postgres-pgadmin-compose/actions/workflows/test.yml/badge.svg)](https://github.com/hendisantika/postgres-pgadmin-compose/actions/workflows/test.yml)
+
 Docker Compose setup for PostgreSQL 18 and pgAdmin 4.
 
 ## Prerequisites

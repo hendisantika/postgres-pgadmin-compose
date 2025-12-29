@@ -1,0 +1,116 @@
+name: Test Docker Compose
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          POSTGRES_USER=testuser
+          POSTGRES_PASSWORD=testpass123
+          POSTGRES_DB=testdb
+          PGADMIN_DEFAULT_EMAIL=admin@test.com
+          PGADMIN_DEFAULT_PASSWORD=adminpass123
+          EOF
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Wait for PostgreSQL to be healthy
+        run: |
+          echo "Waiting for PostgreSQL to be healthy..."
+          timeout 60 bash -c 'until docker compose ps postgres | grep -q "healthy"; do sleep 2; done'
+          echo "PostgreSQL is healthy!"
+
+      - name: Wait for pgAdmin to be ready
+        run: |
+          echo "Waiting for pgAdmin to be ready..."
+          timeout 60 bash -c 'until curl -s http://localhost:5050 > /dev/null; do sleep 2; done'
+          echo "pgAdmin is ready!"
+
+      - name: Show container status
+        run: docker compose ps
+
+      - name: Test PostgreSQL connection
+        run: |
+          docker exec postgres_db psql -U testuser -d testdb -c "SELECT version();"
+
+      - name: Test init script - Check schema exists
+        run: |
+          docker exec postgres_db psql -U testuser -d testdb -c "SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'app';" | grep -q "app"
+
+      - name: Test init script - Check tables exist
+        run: |
+          TABLES=$(docker exec postgres_db psql -U testuser -d testdb -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'app';")
+          if [ "$TABLES" -lt 5 ]; then
+            echo "Expected at least 5 tables, found $TABLES"
+            exit 1
+          fi
+          echo "Found $TABLES tables in app schema"
+
+      - name: Test init script - Check sample data
+        run: |
+          # Check categories
+          CATEGORIES=$(docker exec postgres_db psql -U testuser -d testdb -t -c "SELECT COUNT(*) FROM app.categories;")
+          echo "Categories: $CATEGORIES"
+
+          # Check products
+          PRODUCTS=$(docker exec postgres_db psql -U testuser -d testdb -t -c "SELECT COUNT(*) FROM app.products;")
+          echo "Products: $PRODUCTS"
+
+          # Check users
+          USERS=$(docker exec postgres_db psql -U testuser -d testdb -t -c "SELECT COUNT(*) FROM app.users;")
+          echo "Users: $USERS"
+
+          if [ "$CATEGORIES" -lt 5 ] || [ "$PRODUCTS" -lt 10 ] || [ "$USERS" -lt 3 ]; then
+            echo "Sample data not loaded correctly"
+            exit 1
+          fi
+          echo "Sample data verified successfully!"
+
+      - name: Test order_summary view
+        run: |
+          docker exec postgres_db psql -U testuser -d testdb -c "SELECT * FROM app.order_summary;"
+
+      - name: Test backup script
+        run: |
+          chmod +x scripts/backup.sh
+          ./scripts/backup.sh
+          ls -la backups/
+          if [ ! -f backups/*.sql.gz ]; then
+            echo "Backup file not created"
+            exit 1
+          fi
+          echo "Backup created successfully!"
+
+      - name: Test pgAdmin is accessible
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5050)
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "pgAdmin returned HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "pgAdmin is accessible (HTTP 200)"
+
+      - name: Show PostgreSQL logs on failure
+        if: failure()
+        run: docker compose logs postgres
+
+      - name: Show pgAdmin logs on failure
+        if: failure()
+        run: docker compose logs pgadmin
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
