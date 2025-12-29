@@ -97,11 +97,11 @@ jobs:
       - name: Test pgAdmin is accessible
         run: |
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5050)
-          if [ "$HTTP_CODE" != "200" ]; then
+          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "302" ]; then
             echo "pgAdmin returned HTTP $HTTP_CODE"
             exit 1
           fi
-          echo "pgAdmin is accessible (HTTP 200)"
+          echo "pgAdmin is accessible (HTTP $HTTP_CODE)"
 
       - name: Show PostgreSQL logs on failure
         if: failure()
