@@ -74,6 +74,43 @@ docker compose logs -f postgres
 docker compose logs -f pgadmin
 ```
 
+## Sample Data
+
+The database is initialized with sample data on first startup:
+
+**Schema:** `app`
+
+| Table | Description |
+|-------|-------------|
+| `users` | Sample users with UUID primary keys |
+| `categories` | Product categories (Electronics, Clothing, Books, etc.) |
+| `products` | 12 sample products with prices and stock |
+| `orders` | Sample orders with status tracking |
+| `order_items` | Order line items |
+| `order_summary` | View combining order details |
+
+**Query examples:**
+
+```sql
+-- List all products
+SELECT * FROM app.products;
+
+-- Get order summary
+SELECT * FROM app.order_summary;
+
+-- Products by category
+SELECT p.name, p.price, c.name as category
+FROM app.products p
+JOIN app.categories c ON p.category_id = c.id;
+```
+
+To reset sample data, remove volumes and restart:
+
+```bash
+docker compose down -v
+docker compose up -d
+```
+
 ## Backup and Restore
 
 ### Backup Single Database
