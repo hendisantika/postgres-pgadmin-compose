@@ -40,6 +40,7 @@ Docker Compose setup for PostgreSQL 18 and pgAdmin 4.
 5. Access the services:
    - **PostgreSQL**: `localhost:5432`
    - **pgAdmin**: http://localhost:5050
+   - **Monitor Dashboard**: http://localhost:8888
 
 ## Connecting pgAdmin to PostgreSQL
 
@@ -101,6 +102,23 @@ docker compose logs -f
 # Open PostgreSQL shell
 docker exec -it postgres_db psql -U yu71 -d postgres
 ```
+
+## Monitoring Dashboard
+
+Access the health monitoring dashboard at http://localhost:8888
+
+**Features:**
+- Real-time container health status
+- CPU and memory usage per container
+- Network and Block I/O statistics
+- PostgreSQL connection status and version
+- Database size and active connections
+- Table row counts and sizes
+- Auto-refresh every 5 seconds
+
+**API Endpoints:**
+- `GET /api/status` - Full status JSON
+- `GET /api/health` - Simple health check
 
 ## Sample Data
 

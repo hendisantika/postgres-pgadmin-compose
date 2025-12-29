@@ -1,4 +1,4 @@
-.PHONY: help up down restart logs logs-postgres logs-pgadmin ps shell backup backup-all restore clean clean-all status
+.PHONY: help up down restart logs logs-postgres logs-pgadmin logs-monitor ps shell backup backup-all restore clean clean-all status build
 
 # Load environment variables
 ifneq (,$(wildcard ./.env))
@@ -22,6 +22,7 @@ help:
 	@echo "  logs          View all logs"
 	@echo "  logs-postgres View PostgreSQL logs"
 	@echo "  logs-pgadmin  View pgAdmin logs"
+	@echo "  logs-monitor  View monitor logs"
 	@echo ""
 	@echo "  shell         Open PostgreSQL shell"
 	@echo "  shell-bash    Open bash in PostgreSQL container"
@@ -33,15 +34,20 @@ help:
 	@echo "  clean         Stop services and remove volumes"
 	@echo "  clean-all     Remove everything including images and backups"
 	@echo ""
+	@echo "  build         Build/rebuild services"
 	@echo "  init          Initialize environment (.env from .env.example)"
 
 # Service management
+build:
+	docker compose build
+
 up:
-	docker compose up -d
+	docker compose up -d --build
 	@echo ""
 	@echo "Services started!"
 	@echo "  PostgreSQL: localhost:5432"
 	@echo "  pgAdmin:    http://localhost:5050"
+	@echo "  Monitor:    http://localhost:8888"
 
 down:
 	docker compose down
@@ -71,6 +77,9 @@ logs-postgres:
 
 logs-pgadmin:
 	docker compose logs -f pgadmin
+
+logs-monitor:
+	docker compose logs -f monitor
 
 # Database access
 shell:
