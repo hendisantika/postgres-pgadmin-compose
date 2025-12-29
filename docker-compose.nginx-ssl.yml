@@ -1,0 +1,44 @@
+# Nginx reverse proxy with SSL configuration
+# Usage: docker compose -f docker-compose.yml -f docker-compose.nginx-ssl.yml up -d
+# Note: Run ./scripts/generate-ssl.sh first to create certificates
+
+services:
+  # Override pgadmin to not expose port directly
+  pgadmin:
+    ports: !reset []
+
+  # Override monitor to not expose port directly
+  monitor:
+    ports: !reset []
+
+  # Nginx reverse proxy with SSL
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+      - "${NGINX_POSTGRES_PORT:-5433}:5433"
+    volumes:
+      - ./nginx/nginx-ssl.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pgadmin:
+        condition: service_started
+      monitor:
+        condition: service_started
+    networks:
+      - postgres_network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "--no-check-certificate", "https://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

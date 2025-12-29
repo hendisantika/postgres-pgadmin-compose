@@ -1,4 +1,4 @@
-.PHONY: help up down restart logs logs-postgres logs-pgadmin logs-monitor ps shell backup backup-all restore clean clean-all status build
+.PHONY: help up down restart logs logs-postgres logs-pgadmin logs-monitor logs-nginx ps shell backup backup-all restore clean clean-all status build up-nginx up-nginx-ssl generate-ssl
 
 # Load environment variables
 ifneq (,$(wildcard ./.env))
@@ -36,6 +36,12 @@ help:
 	@echo ""
 	@echo "  build         Build/rebuild services"
 	@echo "  init          Initialize environment (.env from .env.example)"
+	@echo ""
+	@echo "Nginx (Remote Access):"
+	@echo "  up-nginx      Start with nginx reverse proxy (HTTP)"
+	@echo "  up-nginx-ssl  Start with nginx reverse proxy (HTTPS)"
+	@echo "  logs-nginx    View nginx logs"
+	@echo "  generate-ssl  Generate self-signed SSL certificate"
 
 # Service management
 build:
@@ -81,6 +87,9 @@ logs-pgadmin:
 logs-monitor:
 	docker compose logs -f monitor
 
+logs-nginx:
+	docker compose -f docker-compose.yml -f docker-compose.nginx.yml logs -f nginx
+
 # Database access
 shell:
 	@docker exec -it postgres_db psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
@@ -124,3 +133,24 @@ init:
 	else \
 		echo ".env file already exists"; \
 	fi
+
+# Nginx commands
+up-nginx:
+	docker compose -f docker-compose.yml -f docker-compose.nginx.yml up -d --build
+	@echo ""
+	@echo "Services started with nginx reverse proxy!"
+	@echo "  pgAdmin:    http://localhost/pgadmin/"
+	@echo "  Monitor:    http://localhost/monitor/"
+	@echo "  PostgreSQL: localhost:5433"
+
+up-nginx-ssl: generate-ssl
+	docker compose -f docker-compose.yml -f docker-compose.nginx-ssl.yml up -d --build
+	@echo ""
+	@echo "Services started with nginx reverse proxy (SSL)!"
+	@echo "  pgAdmin:    https://localhost/pgadmin/"
+	@echo "  Monitor:    https://localhost/monitor/"
+	@echo "  PostgreSQL: localhost:5433 (SSL)"
+
+generate-ssl:
+	@chmod +x scripts/generate-ssl.sh
+	@./scripts/generate-ssl.sh

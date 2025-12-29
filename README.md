@@ -83,6 +83,9 @@ make help
 | `make clean` | Stop and remove volumes |
 | `make clean-all` | Remove everything including images |
 | `make init` | Create .env from .env.example |
+| `make up-nginx` | Start with nginx (HTTP) |
+| `make up-nginx-ssl` | Start with nginx (HTTPS) |
+| `make generate-ssl` | Generate self-signed SSL cert |
 
 ### Without Make
 
@@ -101,6 +104,81 @@ docker compose logs -f
 
 # Open PostgreSQL shell
 docker exec -it postgres_db psql -U yu71 -d postgres
+```
+
+## Remote Access with Nginx
+
+For remote access, use nginx as a reverse proxy.
+
+### HTTP (Development)
+
+```bash
+make up-nginx
+```
+
+Access services:
+- **pgAdmin**: http://your-server/pgadmin/
+- **Monitor**: http://your-server/monitor/
+- **PostgreSQL**: your-server:5433
+
+### HTTPS (Production)
+
+```bash
+# Generate self-signed certificate (for testing)
+make generate-ssl
+
+# Or use your own certificates
+# Place cert.pem and key.pem in nginx/ssl/
+
+# Start with SSL
+make up-nginx-ssl
+```
+
+Access services:
+- **pgAdmin**: https://your-server/pgadmin/
+- **Monitor**: https://your-server/monitor/
+- **PostgreSQL**: your-server:5433 (SSL)
+
+### Remote PostgreSQL Connection
+
+Connect from remote client:
+
+```bash
+psql -h your-server -p 5433 -U your_username -d your_database
+```
+
+Connection string:
+```
+postgresql://your_username:your_password@your-server:5433/your_database
+```
+
+### Custom Ports
+
+Edit `.env` to change default ports:
+
+```env
+NGINX_HTTP_PORT=80
+NGINX_HTTPS_PORT=443
+NGINX_POSTGRES_PORT=5433
+```
+
+### Let's Encrypt (Production)
+
+For production, replace self-signed certificates with Let's Encrypt:
+
+```bash
+# Install certbot
+sudo apt install certbot
+
+# Generate certificate
+sudo certbot certonly --standalone -d your-domain.com
+
+# Copy certificates
+sudo cp /etc/letsencrypt/live/your-domain.com/fullchain.pem nginx/ssl/cert.pem
+sudo cp /etc/letsencrypt/live/your-domain.com/privkey.pem nginx/ssl/key.pem
+
+# Start with SSL
+make up-nginx-ssl
 ```
 
 ## Monitoring Dashboard
