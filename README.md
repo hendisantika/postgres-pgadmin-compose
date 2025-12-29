@@ -140,12 +140,19 @@ docker exec -it postgres_db psql -U yu71 -d postgres
 
 ## Remote Access with Nginx
 
-Choose the setup based on your server:
+Choose the setup based on your server configuration:
 
-| Scenario | Command | Use When |
-|----------|---------|----------|
-| **Docker Nginx** | `make up-nginx-ssl` | Server has NO existing nginx |
-| **Host Nginx** | `make up-standalone` | Server has existing nginx installed |
+### Quick Comparison
+
+| Feature | Docker Nginx | Host Nginx (Standalone) |
+|---------|--------------|------------------------|
+| **Command** | `make up-nginx-ssl` | `make up-standalone` |
+| **Use when** | Server has NO nginx | Server HAS nginx installed |
+| **Nginx runs in** | Docker container | Host system |
+| **Config location** | `nginx/nginx-ssl.conf` | `/etc/nginx/sites-available/` |
+| **pgAdmin port** | Via nginx proxy | `127.0.0.1:5051` |
+| **Monitor port** | Via nginx proxy | `127.0.0.1:8889` |
+| **PostgreSQL** | `0.0.0.0:5433` (via nginx stream) | `0.0.0.0:5432` (direct) |
 
 ---
 
@@ -218,6 +225,16 @@ Access services:
 
 Use this when your server already has nginx installed. Services bind to localhost and your existing nginx proxies to them.
 
+#### Architecture
+
+```
+Internet → Host Nginx (443/5433) → Docker Services
+                ↓                        ↓
+         pgadmin.mnet.web.id    →   127.0.0.1:5051 (pgAdmin)
+         pg.mnet.web.id         →   127.0.0.1:8889 (Monitor)
+         pg.mnet.web.id:5433    →   127.0.0.1:5432 (PostgreSQL)
+```
+
 #### Start Services
 
 ```bash
@@ -225,9 +242,19 @@ make up-standalone
 ```
 
 Services will listen on:
-- **PostgreSQL**: `0.0.0.0:5432`
-- **pgAdmin**: `127.0.0.1:5051`
-- **Monitor**: `127.0.0.1:8889`
+| Service | Binding | Description |
+|---------|---------|-------------|
+| PostgreSQL | `0.0.0.0:5432` | Direct access (or via nginx stream on 5433) |
+| pgAdmin | `127.0.0.1:5051` | Localhost only, nginx proxies HTTPS |
+| Monitor | `127.0.0.1:8889` | Localhost only, nginx proxies HTTPS |
+
+#### Provided Config Files
+
+| File | Purpose |
+|------|---------|
+| `nginx/sites-available/pgadmin.mnet.web.id.conf` | pgAdmin HTTPS reverse proxy |
+| `nginx/sites-available/pg.mnet.web.id.conf` | Monitor HTTPS reverse proxy |
+| `nginx/sites-available/postgres-stream.conf` | PostgreSQL TCP stream proxy |
 
 #### Configure Host Nginx
 
@@ -293,10 +320,18 @@ postgresql://your_username:your_password@pg.mnet.web.id:5433/your_database
 
 Edit `.env` to change default ports:
 
+**Docker Nginx mode:**
 ```env
 NGINX_HTTP_PORT=80
 NGINX_HTTPS_PORT=443
 NGINX_POSTGRES_PORT=5433
+```
+
+**Standalone mode (host nginx):**
+```env
+STANDALONE_PGADMIN_PORT=5051
+STANDALONE_MONITOR_PORT=8889
+STANDALONE_POSTGRES_PORT=5432
 ```
 
 ## Monitoring Dashboard
