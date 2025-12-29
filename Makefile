@@ -143,13 +143,20 @@ up-nginx:
 	@echo "  Monitor:    http://localhost/monitor/"
 	@echo "  PostgreSQL: localhost:5433"
 
-up-nginx-ssl: generate-ssl
+up-nginx-ssl:
+	@if [ ! -f nginx/ssl/cloudflare.pem ] || [ ! -f nginx/ssl/cloudflare.key ]; then \
+		echo "Error: Cloudflare SSL certificates not found!"; \
+		echo "Please place your certificates in nginx/ssl/:"; \
+		echo "  - nginx/ssl/cloudflare.pem (Origin Certificate)"; \
+		echo "  - nginx/ssl/cloudflare.key (Private Key)"; \
+		exit 1; \
+	fi
 	docker compose -f docker-compose.yml -f docker-compose.nginx-ssl.yml up -d --build
 	@echo ""
-	@echo "Services started with nginx reverse proxy (SSL)!"
-	@echo "  pgAdmin:    https://localhost/pgadmin/"
-	@echo "  Monitor:    https://localhost/monitor/"
-	@echo "  PostgreSQL: localhost:5433 (SSL)"
+	@echo "Services started with Cloudflare SSL!"
+	@echo "  pgAdmin:    https://pgadmin.mnet.web.id"
+	@echo "  Monitor:    https://pg.mnet.web.id"
+	@echo "  PostgreSQL: pg.mnet.web.id:5433"
 
 generate-ssl:
 	@chmod +x scripts/generate-ssl.sh

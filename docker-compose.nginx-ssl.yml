@@ -1,6 +1,13 @@
-# Nginx reverse proxy with SSL configuration
+# Nginx reverse proxy with Cloudflare SSL
 # Usage: docker compose -f docker-compose.yml -f docker-compose.nginx-ssl.yml up -d
-# Note: Run ./scripts/generate-ssl.sh first to create certificates
+#
+# Domains:
+#   - pgadmin.mnet.web.id (pgAdmin)
+#   - pg.mnet.web.id (Monitor + PostgreSQL TCP)
+#
+# Before starting, place Cloudflare Origin certificates in nginx/ssl/:
+#   - nginx/ssl/cloudflare.pem (Origin Certificate)
+#   - nginx/ssl/cloudflare.key (Private Key)
 
 services:
   # Override pgadmin to not expose port directly

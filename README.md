@@ -121,36 +121,65 @@ Access services:
 - **Monitor**: http://your-server/monitor/
 - **PostgreSQL**: your-server:5433
 
-### HTTPS (Production)
+### HTTPS with Cloudflare SSL
 
-```bash
-# Generate self-signed certificate (for testing)
-make generate-ssl
+**Domains:**
+- `pgadmin.mnet.web.id` - pgAdmin interface
+- `pg.mnet.web.id` - Monitor dashboard + PostgreSQL TCP
 
-# Or use your own certificates
-# Place cert.pem and key.pem in nginx/ssl/
+**Setup:**
 
-# Start with SSL
-make up-nginx-ssl
-```
+1. Generate Cloudflare Origin Certificate:
+   - Go to Cloudflare Dashboard → SSL/TLS → Origin Server
+   - Click "Create Certificate"
+   - Select your hostnames: `*.mnet.web.id` or specific domains
+   - Choose validity period (15 years recommended)
+   - Click "Create"
 
-Access services:
-- **pgAdmin**: https://your-server/pgadmin/
-- **Monitor**: https://your-server/monitor/
-- **PostgreSQL**: your-server:5433 (SSL)
+2. Save certificates to `nginx/ssl/`:
+   ```bash
+   mkdir -p nginx/ssl
+
+   # Save the Origin Certificate as cloudflare.pem
+   nano nginx/ssl/cloudflare.pem
+
+   # Save the Private Key as cloudflare.key
+   nano nginx/ssl/cloudflare.key
+
+   # Set permissions
+   chmod 600 nginx/ssl/cloudflare.key
+   chmod 644 nginx/ssl/cloudflare.pem
+   ```
+
+3. Configure Cloudflare DNS:
+   ```
+   pgadmin.mnet.web.id  →  A  →  your-server-ip  (Proxied - orange cloud)
+   pg.mnet.web.id       →  A  →  your-server-ip  (DNS only - grey cloud for TCP)
+   ```
+
+4. Set Cloudflare SSL/TLS mode to **Full (strict)**
+
+5. Start services:
+   ```bash
+   make up-nginx-ssl
+   ```
+
+**Access services:**
+- **pgAdmin**: https://pgadmin.mnet.web.id
+- **Monitor**: https://pg.mnet.web.id
+- **PostgreSQL**: pg.mnet.web.id:5433
 
 ### Remote PostgreSQL Connection
 
-Connect from remote client:
-
 ```bash
-psql -h your-server -p 5433 -U your_username -d your_database
+# Connect via psql
+psql -h pg.mnet.web.id -p 5433 -U your_username -d your_database
+
+# Connection string
+postgresql://your_username:your_password@pg.mnet.web.id:5433/your_database
 ```
 
-Connection string:
-```
-postgresql://your_username:your_password@your-server:5433/your_database
-```
+**Important:** For PostgreSQL TCP connections, set `pg.mnet.web.id` to **DNS only** (grey cloud) in Cloudflare. Cloudflare proxy only supports HTTP/HTTPS traffic.
 
 ### Custom Ports
 
@@ -160,25 +189,6 @@ Edit `.env` to change default ports:
 NGINX_HTTP_PORT=80
 NGINX_HTTPS_PORT=443
 NGINX_POSTGRES_PORT=5433
-```
-
-### Let's Encrypt (Production)
-
-For production, replace self-signed certificates with Let's Encrypt:
-
-```bash
-# Install certbot
-sudo apt install certbot
-
-# Generate certificate
-sudo certbot certonly --standalone -d your-domain.com
-
-# Copy certificates
-sudo cp /etc/letsencrypt/live/your-domain.com/fullchain.pem nginx/ssl/cert.pem
-sudo cp /etc/letsencrypt/live/your-domain.com/privkey.pem nginx/ssl/key.pem
-
-# Start with SSL
-make up-nginx-ssl
 ```
 
 ## Monitoring Dashboard
