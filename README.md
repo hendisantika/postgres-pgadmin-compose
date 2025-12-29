@@ -74,6 +74,50 @@ docker compose logs -f postgres
 docker compose logs -f pgadmin
 ```
 
+## Backup and Restore
+
+### Backup Single Database
+
+```bash
+./scripts/backup.sh
+```
+
+Creates a compressed backup in `backups/` directory with timestamp (e.g., `postgres_20251229_120000.sql.gz`).
+
+### Backup All Databases
+
+```bash
+./scripts/backup-all.sh
+```
+
+Creates a full backup of all databases including roles and permissions.
+
+### Restore Database
+
+```bash
+./scripts/restore.sh backups/postgres_20251229_120000.sql.gz
+```
+
+Or just the filename if it's in the backups directory:
+
+```bash
+./scripts/restore.sh postgres_20251229_120000.sql.gz
+```
+
+### Automated Backups (Cron)
+
+Add to crontab for daily backups at 2 AM:
+
+```bash
+crontab -e
+```
+
+```cron
+0 2 * * * /path/to/postgres-pgadmin-compose/scripts/backup.sh >> /var/log/pg_backup.log 2>&1
+```
+
+Backups older than 7 days are automatically deleted.
+
 ## Connecting from Applications
 
 Use these connection details:
