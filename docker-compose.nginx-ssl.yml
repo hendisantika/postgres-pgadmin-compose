@@ -6,8 +6,8 @@
 #   - pg.mnet.web.id (Monitor + PostgreSQL TCP)
 #
 # Before starting, place Cloudflare Origin certificates in nginx/ssl/:
-#   - nginx/ssl/cloudflare.pem (Origin Certificate)
-#   - nginx/ssl/cloudflare.key (Private Key)
+#   - nginx/ssl/cloudfare.pem (Origin Certificate)
+#   - nginx/ssl/cloudfare.key (Private Key)
 
 services:
   # Override pgadmin to not expose port directly

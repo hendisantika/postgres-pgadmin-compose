@@ -144,11 +144,11 @@ up-nginx:
 	@echo "  PostgreSQL: localhost:5433"
 
 up-nginx-ssl:
-	@if [ ! -f nginx/ssl/cloudflare.pem ] || [ ! -f nginx/ssl/cloudflare.key ]; then \
+	@if [ ! -f nginx/ssl/cloudfare.pem ] || [ ! -f nginx/ssl/cloudfare.key ]; then \
 		echo "Error: Cloudflare SSL certificates not found!"; \
 		echo "Please place your certificates in nginx/ssl/:"; \
-		echo "  - nginx/ssl/cloudflare.pem (Origin Certificate)"; \
-		echo "  - nginx/ssl/cloudflare.key (Private Key)"; \
+		echo "  - nginx/ssl/cloudfare.pem (Origin Certificate)"; \
+		echo "  - nginx/ssl/cloudfare.key (Private Key)"; \
 		exit 1; \
 	fi
 	docker compose -f docker-compose.yml -f docker-compose.nginx-ssl.yml up -d --build

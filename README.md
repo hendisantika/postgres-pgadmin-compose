@@ -170,15 +170,15 @@ Access services:
    ```bash
    mkdir -p nginx/ssl
 
-   # Save the Origin Certificate as cloudflare.pem
-   nano nginx/ssl/cloudflare.pem
+   # Save the Origin Certificate as cloudfare.pem
+   nano nginx/ssl/cloudfare.pem
 
-   # Save the Private Key as cloudflare.key
-   nano nginx/ssl/cloudflare.key
+   # Save the Private Key as cloudfare.key
+   nano nginx/ssl/cloudfare.key
 
    # Set permissions
-   chmod 600 nginx/ssl/cloudflare.key
-   chmod 644 nginx/ssl/cloudflare.pem
+   chmod 600 nginx/ssl/cloudfare.key
+   chmod 644 nginx/ssl/cloudfare.pem
    ```
 
 3. Configure Cloudflare DNS:
