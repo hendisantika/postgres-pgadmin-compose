@@ -1,4 +1,4 @@
-.PHONY: help up down restart logs logs-postgres logs-pgadmin logs-monitor logs-nginx ps shell backup backup-all restore clean clean-all status build up-nginx up-nginx-ssl generate-ssl
+.PHONY: help up down restart logs logs-postgres logs-pgadmin logs-monitor logs-nginx ps shell backup backup-all restore clean clean-all status build up-nginx up-nginx-ssl up-standalone install-nginx-configs generate-ssl
 
 # Load environment variables
 ifneq (,$(wildcard ./.env))
@@ -37,11 +37,15 @@ help:
 	@echo "  build         Build/rebuild services"
 	@echo "  init          Initialize environment (.env from .env.example)"
 	@echo ""
-	@echo "Nginx (Remote Access):"
-	@echo "  up-nginx      Start with nginx reverse proxy (HTTP)"
-	@echo "  up-nginx-ssl  Start with nginx reverse proxy (HTTPS)"
+	@echo "Docker Nginx (server WITHOUT existing nginx):"
+	@echo "  up-nginx      Start with Docker nginx (HTTP)"
+	@echo "  up-nginx-ssl  Start with Docker nginx (HTTPS/Cloudflare)"
 	@echo "  logs-nginx    View nginx logs"
 	@echo "  generate-ssl  Generate self-signed SSL certificate"
+	@echo ""
+	@echo "Host Nginx (server WITH existing nginx):"
+	@echo "  up-standalone       Start services for host nginx proxy"
+	@echo "  install-nginx-configs  Show nginx config installation guide"
 
 # Service management
 build:
@@ -161,3 +165,47 @@ up-nginx-ssl:
 generate-ssl:
 	@chmod +x scripts/generate-ssl.sh
 	@./scripts/generate-ssl.sh
+
+# Host Nginx commands (for servers WITH existing nginx)
+up-standalone:
+	docker compose -f docker-compose.yml -f docker-compose.standalone.yml up -d --build
+	@echo ""
+	@echo "Services started for host nginx proxy!"
+	@echo ""
+	@echo "Services listening on:"
+	@echo "  PostgreSQL: 0.0.0.0:5432 (or POSTGRES_BIND in .env)"
+	@echo "  pgAdmin:    127.0.0.1:5050"
+	@echo "  Monitor:    127.0.0.1:8888"
+	@echo ""
+	@echo "Configure your host nginx with configs from nginx/sites-available/"
+	@echo "Run 'make install-nginx-configs' for installation guide"
+
+install-nginx-configs:
+	@echo "============================================"
+	@echo "Host Nginx Configuration Guide"
+	@echo "============================================"
+	@echo ""
+	@echo "1. Copy SSL certificates to host nginx:"
+	@echo "   sudo mkdir -p /etc/nginx/ssl"
+	@echo "   sudo cp nginx/ssl/cloudfare.pem /etc/nginx/ssl/"
+	@echo "   sudo cp nginx/ssl/cloudfare.key /etc/nginx/ssl/"
+	@echo "   sudo chmod 600 /etc/nginx/ssl/cloudfare.key"
+	@echo ""
+	@echo "2. Copy site configurations:"
+	@echo "   sudo cp nginx/sites-available/pgadmin.mnet.web.id.conf /etc/nginx/sites-available/"
+	@echo "   sudo cp nginx/sites-available/pg.mnet.web.id.conf /etc/nginx/sites-available/"
+	@echo ""
+	@echo "3. Enable sites:"
+	@echo "   sudo ln -sf /etc/nginx/sites-available/pgadmin.mnet.web.id.conf /etc/nginx/sites-enabled/"
+	@echo "   sudo ln -sf /etc/nginx/sites-available/pg.mnet.web.id.conf /etc/nginx/sites-enabled/"
+	@echo ""
+	@echo "4. For PostgreSQL TCP proxy (port 5433), add to /etc/nginx/nginx.conf:"
+	@echo "   See nginx/sites-available/postgres-stream.conf for the stream block"
+	@echo ""
+	@echo "5. Test and reload nginx:"
+	@echo "   sudo nginx -t && sudo systemctl reload nginx"
+	@echo ""
+	@echo "Access services:"
+	@echo "  pgAdmin:    https://pgadmin.mnet.web.id"
+	@echo "  Monitor:    https://pg.mnet.web.id"
+	@echo "  PostgreSQL: pg.mnet.web.id:5433"

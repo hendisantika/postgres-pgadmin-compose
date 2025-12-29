@@ -1,0 +1,21 @@
+# Standalone mode - For servers WITH existing host nginx
+# Usage: docker compose -f docker-compose.yml -f docker-compose.standalone.yml up -d
+#
+# This config exposes services on localhost only, letting host nginx handle SSL/proxying
+# Copy nginx/sites-available/*.conf to your host nginx configuration
+
+services:
+  # Override postgres to bind to all interfaces for remote access via host nginx stream
+  postgres:
+    ports:
+      - "${POSTGRES_BIND:-0.0.0.0}:5432:5432"
+
+  # Override pgadmin to bind to localhost only (host nginx will proxy)
+  pgadmin:
+    ports:
+      - "127.0.0.1:5050:80"
+
+  # Override monitor to bind to localhost only (host nginx will proxy)
+  monitor:
+    ports:
+      - "127.0.0.1:8888:8080"

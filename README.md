@@ -113,8 +113,10 @@ make help
 | `make clean` | Stop and remove volumes |
 | `make clean-all` | Remove everything including images |
 | `make init` | Create .env from .env.example |
-| `make up-nginx` | Start with nginx (HTTP) |
-| `make up-nginx-ssl` | Start with nginx (HTTPS) |
+| `make up-nginx` | Start with Docker nginx (HTTP) |
+| `make up-nginx-ssl` | Start with Docker nginx (HTTPS) |
+| `make up-standalone` | Start for host nginx proxy |
+| `make install-nginx-configs` | Show host nginx setup guide |
 | `make generate-ssl` | Generate self-signed SSL cert |
 
 ### Without Make
@@ -138,9 +140,20 @@ docker exec -it postgres_db psql -U yu71 -d postgres
 
 ## Remote Access with Nginx
 
-For remote access, use nginx as a reverse proxy.
+Choose the setup based on your server:
 
-### HTTP (Development)
+| Scenario | Command | Use When |
+|----------|---------|----------|
+| **Docker Nginx** | `make up-nginx-ssl` | Server has NO existing nginx |
+| **Host Nginx** | `make up-standalone` | Server has existing nginx installed |
+
+---
+
+### Option 1: Docker Nginx (No existing nginx)
+
+Use this when your server doesn't have nginx installed. Nginx runs in a Docker container.
+
+#### HTTP (Development)
 
 ```bash
 make up-nginx
@@ -151,7 +164,7 @@ Access services:
 - **Monitor**: http://your-server/monitor/
 - **PostgreSQL**: your-server:5433
 
-### HTTPS with Cloudflare SSL
+#### HTTPS with Cloudflare SSL
 
 **Domains:**
 - `pgadmin.mnet.web.id` - pgAdmin interface
@@ -198,6 +211,71 @@ Access services:
 - **pgAdmin**: https://pgadmin.mnet.web.id
 - **Monitor**: https://pg.mnet.web.id
 - **PostgreSQL**: pg.mnet.web.id:5433
+
+---
+
+### Option 2: Host Nginx (Existing nginx on server)
+
+Use this when your server already has nginx installed. Services bind to localhost and your existing nginx proxies to them.
+
+#### Start Services
+
+```bash
+make up-standalone
+```
+
+Services will listen on:
+- **PostgreSQL**: `0.0.0.0:5432`
+- **pgAdmin**: `127.0.0.1:5050`
+- **Monitor**: `127.0.0.1:8888`
+
+#### Configure Host Nginx
+
+1. **Copy SSL certificates:**
+   ```bash
+   sudo mkdir -p /etc/nginx/ssl
+   sudo cp nginx/ssl/cloudfare.pem /etc/nginx/ssl/
+   sudo cp nginx/ssl/cloudfare.key /etc/nginx/ssl/
+   sudo chmod 600 /etc/nginx/ssl/cloudfare.key
+   ```
+
+2. **Copy site configurations:**
+   ```bash
+   sudo cp nginx/sites-available/pgadmin.mnet.web.id.conf /etc/nginx/sites-available/
+   sudo cp nginx/sites-available/pg.mnet.web.id.conf /etc/nginx/sites-available/
+   ```
+
+3. **Enable sites:**
+   ```bash
+   sudo ln -sf /etc/nginx/sites-available/pgadmin.mnet.web.id.conf /etc/nginx/sites-enabled/
+   sudo ln -sf /etc/nginx/sites-available/pg.mnet.web.id.conf /etc/nginx/sites-enabled/
+   ```
+
+4. **Add PostgreSQL TCP stream** (for port 5433):
+
+   Edit `/etc/nginx/nginx.conf` and add at the END (after the `http {}` block):
+   ```nginx
+   stream {
+       upstream postgres {
+           server 127.0.0.1:5432;
+       }
+       server {
+           listen 5433;
+           proxy_pass postgres;
+           proxy_connect_timeout 60s;
+           proxy_timeout 300s;
+       }
+   }
+   ```
+
+5. **Test and reload:**
+   ```bash
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
+
+Run `make install-nginx-configs` for a quick reference guide.
+
+---
 
 ### Remote PostgreSQL Connection
 
