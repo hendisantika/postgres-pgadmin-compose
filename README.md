@@ -190,15 +190,15 @@ Access services:
    ```bash
    mkdir -p nginx/ssl
 
-   # Save the Origin Certificate as cloudfare.pem
-   nano nginx/ssl/cloudfare.pem
+   # Save the Origin Certificate as cloudflare.pem
+   nano nginx/ssl/cloudflare.pem
 
-   # Save the Private Key as cloudfare.key
-   nano nginx/ssl/cloudfare.key
+   # Save the Private Key as cloudflare.key
+   nano nginx/ssl/cloudflare.key
 
    # Set permissions
-   chmod 600 nginx/ssl/cloudfare.key
-   chmod 644 nginx/ssl/cloudfare.pem
+   chmod 600 nginx/ssl/cloudflare.key
+   chmod 644 nginx/ssl/cloudflare.pem
    ```
 
 3. Configure Cloudflare DNS:
@@ -261,9 +261,9 @@ Services will listen on:
 1. **Copy SSL certificates:**
    ```bash
    sudo mkdir -p /etc/nginx/ssl
-   sudo cp nginx/ssl/cloudfare.pem /etc/nginx/ssl/
-   sudo cp nginx/ssl/cloudfare.key /etc/nginx/ssl/
-   sudo chmod 600 /etc/nginx/ssl/cloudfare.key
+   sudo cp nginx/ssl/cloudflare.pem /etc/nginx/ssl/
+   sudo cp nginx/ssl/cloudflare.key /etc/nginx/ssl/
+   sudo chmod 600 /etc/nginx/ssl/cloudflare.key
    ```
 
 2. **Copy site configurations:**

@@ -148,11 +148,11 @@ up-nginx:
 	@echo "  PostgreSQL: localhost:5433"
 
 up-nginx-ssl:
-	@if [ ! -f nginx/ssl/cloudfare.pem ] || [ ! -f nginx/ssl/cloudfare.key ]; then \
+	@if [ ! -f nginx/ssl/cloudflare.pem ] || [ ! -f nginx/ssl/cloudflare.key ]; then \
 		echo "Error: Cloudflare SSL certificates not found!"; \
 		echo "Please place your certificates in nginx/ssl/:"; \
-		echo "  - nginx/ssl/cloudfare.pem (Origin Certificate)"; \
-		echo "  - nginx/ssl/cloudfare.key (Private Key)"; \
+		echo "  - nginx/ssl/cloudflare.pem (Origin Certificate)"; \
+		echo "  - nginx/ssl/cloudflare.key (Private Key)"; \
 		exit 1; \
 	fi
 	docker compose -f docker-compose.yml -f docker-compose.nginx-ssl.yml up -d --build
@@ -187,9 +187,9 @@ install-nginx-configs:
 	@echo ""
 	@echo "1. Copy SSL certificates to host nginx:"
 	@echo "   sudo mkdir -p /etc/nginx/ssl"
-	@echo "   sudo cp nginx/ssl/cloudfare.pem /etc/nginx/ssl/"
-	@echo "   sudo cp nginx/ssl/cloudfare.key /etc/nginx/ssl/"
-	@echo "   sudo chmod 600 /etc/nginx/ssl/cloudfare.key"
+	@echo "   sudo cp nginx/ssl/cloudflare.pem /etc/nginx/ssl/"
+	@echo "   sudo cp nginx/ssl/cloudflare.key /etc/nginx/ssl/"
+	@echo "   sudo chmod 600 /etc/nginx/ssl/cloudflare.key"
 	@echo ""
 	@echo "2. Copy site configurations:"
 	@echo "   sudo cp nginx/sites-available/pgadmin.mnet.web.id.conf /etc/nginx/sites-available/"
