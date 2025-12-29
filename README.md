@@ -54,6 +54,35 @@ Docker Compose setup for PostgreSQL 18 and pgAdmin 4.
 
 ## Commands
 
+Use `make help` to see all available commands:
+
+```bash
+make help
+```
+
+### Quick Reference
+
+| Command | Description |
+|---------|-------------|
+| `make up` | Start all services |
+| `make down` | Stop all services |
+| `make restart` | Restart all services |
+| `make ps` | Show running containers |
+| `make status` | Show detailed status with DB info |
+| `make logs` | View all logs |
+| `make logs-postgres` | View PostgreSQL logs |
+| `make logs-pgadmin` | View pgAdmin logs |
+| `make shell` | Open PostgreSQL shell |
+| `make shell-bash` | Open bash in PostgreSQL container |
+| `make backup` | Backup database |
+| `make backup-all` | Backup all databases |
+| `make restore FILE=<file>` | Restore from backup |
+| `make clean` | Stop and remove volumes |
+| `make clean-all` | Remove everything including images |
+| `make init` | Create .env from .env.example |
+
+### Without Make
+
 ```bash
 # Start services
 docker compose up -d
@@ -67,11 +96,8 @@ docker compose down -v
 # View logs
 docker compose logs -f
 
-# View PostgreSQL logs
-docker compose logs -f postgres
-
-# View pgAdmin logs
-docker compose logs -f pgadmin
+# Open PostgreSQL shell
+docker exec -it postgres_db psql -U yu71 -d postgres
 ```
 
 ## Sample Data
