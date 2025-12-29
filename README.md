@@ -226,8 +226,8 @@ make up-standalone
 
 Services will listen on:
 - **PostgreSQL**: `0.0.0.0:5432`
-- **pgAdmin**: `127.0.0.1:5050`
-- **Monitor**: `127.0.0.1:8888`
+- **pgAdmin**: `127.0.0.1:5051`
+- **Monitor**: `127.0.0.1:8889`
 
 #### Configure Host Nginx
 

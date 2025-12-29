@@ -3,19 +3,23 @@
 #
 # This config exposes services on localhost only, letting host nginx handle SSL/proxying
 # Copy nginx/sites-available/*.conf to your host nginx configuration
+#
+# Configure ports in .env:
+#   STANDALONE_PGADMIN_PORT=5051
+#   STANDALONE_MONITOR_PORT=8889
 
 services:
   # Override postgres to bind to all interfaces for remote access via host nginx stream
   postgres:
-    ports:
-      - "${POSTGRES_BIND:-0.0.0.0}:5432:5432"
+    ports: !override
+      - "${POSTGRES_BIND:-0.0.0.0}:${STANDALONE_POSTGRES_PORT:-5432}:5432"
 
   # Override pgadmin to bind to localhost only (host nginx will proxy)
   pgadmin:
-    ports:
-      - "127.0.0.1:5050:80"
+    ports: !override
+      - "127.0.0.1:${STANDALONE_PGADMIN_PORT:-5051}:80"
 
   # Override monitor to bind to localhost only (host nginx will proxy)
   monitor:
-    ports:
-      - "127.0.0.1:8888:8080"
+    ports: !override
+      - "127.0.0.1:${STANDALONE_MONITOR_PORT:-8889}:8080"
