@@ -84,9 +84,37 @@ else
     echo ".env file already exists"
 fi
 
-# Step 6: Setup SSL directory
+# Step 6: Configure firewall
 echo ""
-echo "[6/6] Setting up SSL directory..."
+echo "[6/7] Configuring firewall..."
+if command -v ufw &> /dev/null; then
+    sudo ufw allow 22/tcp comment 'SSH'
+    sudo ufw allow 80/tcp comment 'HTTP'
+    sudo ufw allow 443/tcp comment 'HTTPS'
+    sudo ufw allow 5433/tcp comment 'PostgreSQL via Nginx'
+
+    # Enable UFW if not already enabled
+    if sudo ufw status | grep -q "inactive"; then
+        echo "y" | sudo ufw enable
+    fi
+
+    echo "Firewall configured:"
+    sudo ufw status numbered
+else
+    echo "UFW not installed. Installing..."
+    sudo apt install -y ufw
+    sudo ufw allow 22/tcp comment 'SSH'
+    sudo ufw allow 80/tcp comment 'HTTP'
+    sudo ufw allow 443/tcp comment 'HTTPS'
+    sudo ufw allow 5433/tcp comment 'PostgreSQL via Nginx'
+    echo "y" | sudo ufw enable
+    echo "Firewall configured:"
+    sudo ufw status numbered
+fi
+
+# Step 7: Setup SSL directory
+echo ""
+echo "[7/7] Setting up SSL directory..."
 mkdir -p nginx/ssl
 
 if [ ! -f "nginx/ssl/cloudflare.pem" ] || [ ! -f "nginx/ssl/cloudflare.key" ]; then
@@ -126,6 +154,13 @@ echo "   cd $INSTALL_DIR"
 echo "   make up-nginx-ssl"
 echo ""
 echo "4. Configure Cloudflare DNS:"
-echo "   pgadmin.mnet.web.id → A → $(curl -s ifconfig.me) (Proxied)"
-echo "   pg.mnet.web.id → A → $(curl -s ifconfig.me) (DNS only)"
+SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || echo "<your-server-ip>")
+echo "   pgadmin.mnet.web.id → A → $SERVER_IP (Proxied)"
+echo "   pg.mnet.web.id → A → $SERVER_IP (DNS only)"
+echo ""
+echo "5. Firewall ports opened:"
+echo "   22/tcp   - SSH"
+echo "   80/tcp   - HTTP"
+echo "   443/tcp  - HTTPS"
+echo "   5433/tcp - PostgreSQL"
 echo ""
